@@ -1,7 +1,0 @@
-.vscode/**
-.vscode-test/**
-node_modules/fs-extra/**
-.gitignore
-tsconfig.json
-**/tslint.json
-vsc-extension-quickstart.md
