@@ -1,139 +1,25 @@
 {
-    "name": "vscode-vlang",
-    "displayName": "V",
-    "description": "V Language everywhere (syntax highlighting, themes, snippets) for Visual Studio Code.",
-    "publisher": "0x9ef",
-    "icon": "images/icon.png",
-    "version": "0.0.7",
-    "license": "SEE LICENSE IN LICENSE",
-    "private": true,
-    "engines": {
-        "vscode": "^1.20.0"
-    },
-    "homepage": "https://github.com/0x9ef/vscode-vlang/blob/master/README.md",
-    "bugs": {
+	"name": "langauge-v",
+	"version": "1.0.0",
+	"description": "Port of VSCode's extension for V language support for Atom.",
+	"author": "0x9ef <0x9ef@tutanota.com>",
+	"homepage": "https://github.com/0x9ef/vscode-vlang/blob/master/README.md",
+	"bugs": {
         "url": "https://github.com/0x9ef/vscode-vlang/issues"
     },
-    "repository": {
+	"repository": {
         "type": "git",
-        "url": "https://github.com/0x9ef/vscode-vlang.git"
+        "url": "https://github.com/Cutlery-Drawer/language-v.git"
     },
-    "keywords": [
-        "V",
-        "v",
-        "v language",
-        "vlang",
-        "extension",
-        "autocompletion"
-    ],
-    "categories": [
-        "Snippets",
-        "Programming Languages"
-    ],
-    "contributes": {
-        "snippets": [
-            {
-                "language": "v",
-                "path": "snippets/snippets.json"
-            }
-        ],
-        "languages": [
-            {
-                "id": "v",
-                "aliases": [
-                    "V"
-                ],
-                "extensions": [
-                    ".v",
-                    ".vh"
-                ],
-                "configuration": "./language-configuration.json"
-            }
-        ],
-        "grammars": [
-            {
-                "language": "v",
-                "scopeName": "source.v",
-                "path": "./syntaxes/v.tmLanguage.json"
-            }
-        ],
-        "configuration": {
-            "title": "V",
-            "properties": {
-                "v.format.enable": {
-                    "scope": "resource",
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Enable/disable the V formatter (not yet implemented)."
-                }
-            }
-        },
-        "configurationDefaults": {
-            "[v]": {
-                "editor.insertSpaces": true,
-                "editor.formatOnSave": true,
-                "editor.codeActionsOnSave": {
-                    "source.organizeImports": true
-                }
-            }
-        },
-        "commands": [
-            {
-                "command": "v.run",
-                "title": "V: Run current file"
-            },
-            {
-                "command": "v.prod",
-                "title": "V: Build an optimized executable from current file"
-            },
-            {
-                "command": "v.help",
-                "title": "V: Show help info"
-            },
-            {
-                "command": "v.ver",
-                "title": "V: Show version info"
-            },
-            {
-                "command": "v.path",
-                "title": "V: Show local paths info"
-            },
-            {
-                "command": "v.test.file",
-                "title": "V: Test current file"
-            },
-            {
-                "command": "v.test.package",
-                "title": "V: Test current package"
-            },
-            {
-                "command": "v.playground",
-                "title": "V: Upload and share current code to V playground"
-            }
-        ]
-    },
-    "activationEvents": [
-        "onLanguage:v",
-        "onCommand:v.run",
-        "onCommand:v.prod",
-        "onCommand:v.help",
-        "onCommand:v.ver",
-        "onCommand:v.path",
-        "onCommand:v.test.file",
-        "onCommand:v.test.package",
-        "onCommand:v.playground"
-    ],
-    "main": "./out/extension.js",
-    "dependencies": {
-        "vscode-languageclient": "~5.2.1"
-    },
-    "devDependencies": {
-        "@types/vscode": "~1.20.0",
-        "typescript": "~3.5.2"
-    },
-    "scripts": {
-        "vscode:prepublish": "npm run compile",
-        "compile": "tsc -p ./",
-        "watch": "tsc -watch -p ./"
-    }
+	"private": true,
+	"engines": {
+		"atom": "^1.35.0"
+	},
+	"license": "MIT",
+	"keywords": [
+		"V",
+		"v",
+		"v language",
+		"vlang"
+	]
 }

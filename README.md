@@ -1,29 +1,13 @@
-# V for Visual Studio Code
-[![Version](https://vsmarketplacebadge.apphb.com/version/0x9ef.vscode-vlang.svg)](https://marketplace.visualstudio.com/items?itemName=0x9ef.vscode-vlang)
-[![Installs](https://vsmarketplacebadge.apphb.com/installs/0x9ef.vscode-vlang.svg)](https://marketplace.visualstudio.com/items?itemName=0x9ef.vscode-vlang)
-[![Build Status](https://travis-ci.org/0x9ef/vscode-vlang.svg?branch=master)](https://travis-ci.org/0x9ef/vscode-vlang)
+V language support
+==================
 
-[**V Language**](https://vlang.io) support extension for Visual Studio Code. Syntax highlighting and code snippets.
-https://marketplace.visualstudio.com/items?itemName=0x9ef.vscode-vlang&ssr=false
+Port of [**@0x9ef**][]'s [VSCode extension][1] for [V language][2] support.
 
-## Features
-* Code snippets
-* Syntax highlighting 
+This "port" is essentially a copy of [**@0x9ef**][]'s work, with some files
+renamed. Please don't suggest improvements or submit corrections here; send
+them [upstream][1] instead, and updates will eventually be picked up here.
 
-## Preview
-![First demo screenshot](./images/demo1.PNG)
-![Second demo screenshot](./images/demo2.PNG)
 
-## Using
-You will install Visual Studio Code `0.26`. In the command palette (cmd-shift-p) select Install Extension and choose `V`.
-
-_Note_: It is recommended to turn `Auto Save` on in Visual Studio Code (`File -> Auto Save`) when using this extension.
-
-## TODO
-* IntelliSense
-* Code diagnostic
-* Code testing
-* Hot commands
-
-## License
-[MIT](./LICENSE)
+[**@0x9ef**]: https://github.com/0x9ef
+[1]: https://github.com/0x9ef/vscode-vlang
+[2]: https://vlang.io
