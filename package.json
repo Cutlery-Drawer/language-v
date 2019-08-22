@@ -9,7 +9,7 @@
     },
 	"repository": {
         "type": "git",
-        "url": "https://github.com/Cutlery-Drawer/language-v.git"
+        "url": "https://github.com/Alhadis/language-v.git"
     },
 	"private": true,
 	"engines": {
