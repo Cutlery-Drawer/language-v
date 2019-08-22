@@ -1,0 +1,9 @@
+{
+	".source.v": {
+		"editor": {
+			"commentStart": "// ",
+			"increaseIndentPattern": "{\\s*$",
+			"tabType": "hard"
+		}
+	}
+}
