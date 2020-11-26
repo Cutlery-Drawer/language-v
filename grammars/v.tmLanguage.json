@@ -1,7 +1,7 @@
 {
 	"name": "V",
 	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
-	"fileTypes": [".v", ".vh", ".vsh"],
+	"fileTypes": ["v", "vh", "vsh"],
 	"scopeName": "source.v",
 	"patterns": [
 		{
