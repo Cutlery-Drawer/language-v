@@ -13,6 +13,6 @@ them [upstream][1] instead, and updates will eventually be picked up here.
 
 
 [**@0x9ef**]: https://github.com/0x9ef
-[1]: https://github.com/0x9ef/vscode-vlang
+[1]: https://github.com/vlang/vscode-vlang
 [2]: https://vlang.io
 [3]: https://github.com/vlang/v/blob/4760fea4894b714be983cf2/examples/tetris/tetris.v
