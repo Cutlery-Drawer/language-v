@@ -1,6 +1,6 @@
 {
 	"name": "language-v",
-	"version": "1.0.2",
+	"version": "1.1.0",
 	"description": "Atom port of VSCode's extension for V language support.",
 	"author": "0x9ef <0x9ef@tutanota.com>",
 	"homepage": "https://github.com/vlang/vscode-vlang/blob/master/README.md",
