@@ -1,0 +1,6 @@
+".source.v":
+	editor:
+		commentStart: "// "
+		increaseIndentPattern: "{"
+		decreaseIndentPattern: "}"
+		tabType: "hard"
