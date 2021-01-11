@@ -3,3 +3,7 @@ test.v
 testDpm.v
 node_modules
 out
+
+# Project-specific
+tests/*
+!tests/*.v
