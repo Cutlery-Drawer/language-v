@@ -93,7 +93,7 @@ repository:
 	# Function declaration
 	function:
 		name:  "meta.function.v"
-		begin: "(?<![-$])\\b(?:(pub)\\s+)?(fn)(?=\\s|$|\\()"
+		begin: "(?<![-$])\\b(?:(pub)\\s+)?(fn)(?=\\s|$|\\(|/[/*])"
 		end:   "(?!\\G|(?={))"
 		beginCaptures:
 			1: name: "storage.modifier.public.v"
@@ -117,7 +117,7 @@ repository:
 	functionHeader:
 		patterns: [{
 			# Skip empty lines
-			begin: "\\G(?=[ \\t]*$)"
+			begin: "\\G(?=[ \\t]*(?:$|/[/*]))"
 			end:   "(?=\\S)(?!/[/*])"
 			patterns: [include: "#comment"]
 		},{
