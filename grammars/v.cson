@@ -46,6 +46,11 @@ repository:
 		patterns: [
 			{include: "#comment"}
 			{include: "#function"}
+			
+			# Fallback highlighting for unexpected tokens
+			{include: "#type"}
+			{include: "#brackets"}
+			{include: "#comma"}
 		]
 
 
@@ -190,8 +195,31 @@ repository:
 
 	# Type name, sans modifiers or array indicators
 	type:
-		name: "storage.type.${1:/downcase}.v"
-		match: "(?!\\d)(\\w+)"
+		patterns: [{
+			# Predefined types
+			name: "support.type.${1:/downcase}.v"
+			match: "(?x) \\b
+				( any
+				| any_float
+				| any_int
+				| bool
+				| byte
+				| byteptr
+				| charptr
+				| f(?:32|64)
+				| [iu](?:8|16|32|64|128)
+				| int
+				| rune
+				| size_t
+				| string
+				| voidptr
+				) \\b"
+		},{
+			# User-defined
+			name: "entity.name.type.v"
+			match: "(?!\\d)(\\w+)"
+		}]
+			
 
 
 	# Anywhere type annotations are expected/legal
