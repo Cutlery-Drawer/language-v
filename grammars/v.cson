@@ -1,0 +1,101 @@
+name: "V"
+scopeName: "source.v"
+fileTypes: [
+	"v"
+	"vh"
+	"vsh"
+	"vv"
+]
+patterns: [include: "#main"]
+
+repository:
+	main:
+		patterns: [
+			{include: "#comment"}
+			{include: "#function"}
+		]
+
+
+	# Anything that's accepted inside `fn foo(…)`; e.g., `mut names ...[]string`
+	arg:
+		name:  "meta.argument.v"
+		begin: "(?:(mut)\\s+)?(?!\\d|_\\b)(\\w+)\\b"
+		end:   "(?!\\d)(\\w+)|(?=\\s*(?!/[/*]|\\.{3})[^\\[\\w\\s])"
+		beginCaptures:
+			1: name: "storage.modifier.mutable.v"
+			2: name: "variable.parameter.function.v"
+		endCaptures:
+			1: name: "storage.type.${1:/downcase}.v"
+		patterns: [
+			{match: "\\.{3}", name: "keyword.operator.range.ellipsis.splat.spread.rest.v"}
+			{match: "\\[\\]", name: "punctuation.definition.array.type.v"}
+			{include: "#comment"}
+		]
+
+
+	# Argument list, surrounded by parentheses
+	args:
+		name:  "meta.arguments.v"
+		begin: "\\("
+		end:   "\\)"
+		beginCaptures: 0: name: "punctuation.definition.parameters.begin.v"
+		endCaptures:   0: name: "punctuation.definition.parameters.end.v"
+		patterns: [
+			{include: "#comment"}
+			{include: "#arg"}
+		]
+
+
+	# Comments, both single- and multi-line forms
+	comment:
+		patterns: [
+			{include: "#commentLine"}
+			{include: "#commentBlock"}
+		]
+	
+	# Single-line comment
+	commentLine:
+		name:  "comment.line.double-slash.v"
+		begin: "//"
+		end:   "$"
+		beginCaptures:
+			0: name: "punctuation.definition.comment.v"
+
+	# Multiline (nestable) comment
+	commentBlock:
+		name:  "comment.block.v"
+		begin: "/\\*"
+		end:   "\\*/"
+		beginCaptures: 0: name: "punctuation.definition.comment.begin.v"
+		endCaptures:   0: name: "punctuation.definition.comment.end.v"
+		patterns: [include: "#commentBlock"]
+
+
+	# Function declaration
+	function:
+		name:  "meta.function.v"
+		begin: "(?<![-$])\\b(?:(pub)\\s+)?(fn)(?=\\s|$|\\()"
+		end:   "(?!\\G)"
+		beginCaptures:
+			1: name: "storage.modifier.public.v"
+			2: name: "storage.type.function.v"
+		patterns: [{
+			begin: "\\G"
+			end:   "(?={)"
+			patterns: [include: "#functionHeader"]
+		}]
+	
+	# fn foo(arg type)
+	functionHeader:
+		patterns: [{
+			# Skip empty lines
+			begin: "\\G(?=[ \\t]*$)"
+			end:   "(?=\\S)(?!/[/*])"
+			patterns: [include: "#comment"]
+		},{
+			# Receiver argument (for methods)
+			name:  "meta.receiver.v"
+			begin: "(?=\\()"
+			end:   "(?<=\\))"
+			patterns: [include: "#args"]
+		}]
