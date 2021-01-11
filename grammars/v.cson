@@ -46,8 +46,10 @@ repository:
 		patterns: [
 			{include: "#comment"}
 			{include: "#function"}
+			{include: "#variable"}
 			
 			# Fallback highlighting for unexpected tokens
+			{include: "#string"}
 			{include: "#type"}
 			{include: "#brackets"}
 			{include: "#comma"}
@@ -193,6 +195,133 @@ repository:
 		}]
 
 
+	# "Quoted string" or rune (character literal)
+	string:
+		patterns: [{
+			# r'Raw\nstring'
+			name:  "string.quoted.single.raw.v"
+			begin: "(r)(')"
+			end:   "'"
+			beginCaptures:
+				1: name: "keyword.operator.raw-string.v"
+				2: name: "punctuation.definition.string.begin.v"
+			endCaptures:
+				0: name: "punctuation.definition.string.end.v"
+		},{
+			# r"Raw\nstring"
+			name:  "string.quoted.double.raw.v"
+			begin: '(r)(")'
+			end:   '"'
+			beginCaptures:
+				1: name: "keyword.operator.raw-string.v"
+				2: name: "punctuation.definition.string.begin.v"
+			endCaptures:
+				0: name: "punctuation.definition.string.end.v"
+		},{
+			# 'Single-quoted'
+			name:  "string.quoted.single.v"
+			begin: "'"
+			end:   "'"
+			beginCaptures: 0: name: "punctuation.definition.string.begin.v"
+			endCaptures:   0: name: "punctuation.definition.string.end.v"
+			patterns: [include: "#stringInnards"]
+		},{
+			# "Double-quoted"
+			name:  "string.quoted.double.v"
+			begin: '"'
+			end:   '"'
+			beginCaptures: 0: name: "punctuation.definition.string.begin.v"
+			endCaptures:   0: name: "punctuation.definition.string.end.v"
+			patterns: [include: "#stringInnards"]
+		},{
+			# Rune: `😂`
+			name:  "string.quoted.single.rune.v"
+			begin: "`"
+			end:   "`"
+			beginCaptures: 0: name: "punctuation.definition.string.begin.v"
+			endCaptures:   0: name: "punctuation.definition.string.end.v"
+		}]
+
+	# Patterns matched inside a non-raw (cooked?) string
+	stringInnards:
+		patterns: [
+			{include: "#escape"}
+			{include: "#stringInterpolation"}
+		]
+
+
+	# Variable interpolation: "$foo ${bar}"
+	stringInterpolation:
+		patterns: [{
+			# Unbracketed: "$foo $struct.field"
+			name:  "meta.interpolation.simple.v"
+			match: "(\\$)(\\w+(?:\\.\\w+)*)"
+			captures:
+				1: name: "punctuation.definition.variable.v"
+				2: patterns: [include: "#variableRef"]
+		},{
+			# Bracketed: "${foo.bar > 32}"
+			name:  "meta.embedded.section.interpolation.complex.v"
+			begin: "\\${"
+			end:   "}"
+			beginCaptures: 0: name: "punctuation.section.embedded.begin.v"
+			endCaptures:   0: name: "punctuation.section.embedded.end.v"
+			patterns: [
+				{include: "#variableRef"}
+				{include: "#main"}
+			]
+		}]
+		
+
+
+	# Escaped string characters
+	escape:
+		patterns: [
+			{include: "#escapedCharacter"}
+			{include: "#escapedNewline"}
+		]
+
+	# C-like escape sequences
+	escapedCharacter:
+		patterns: [{
+			# C-like, single-character escapes
+			name: "constant.character.escape.v"
+			match: "(\\\\)[abefnrtv'\"?\\\\]"
+			captures:
+				1: name: "punctuation.definition.escape.v"
+		},{
+			# Codepoint, octal
+			name:  "constant.character.escape.codepoint.octal.oct.v"
+			match: "(\\\\)[0-7]{3}"
+			captures:
+				1: name: "punctuation.definition.escape.v"
+		},{
+			# Codepoint, hexadecimal
+			name:  "constant.character.escape.codepoint.hexadecimal.hex.v"
+			match: "\\\\(?:x[0-9A-Fa-f]{2}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})"
+			captures: 0: patterns: [{
+				name: "punctuation.definition.escape.v"
+				match: "\\\\[xuU]"
+			}]
+		},{
+			# Unrecognised escape sequence
+			name:  "constant.character.escape.other.unknown.v"
+			match: "(\\\\)."
+			captures:
+				1: name: "punctuation.definition.escape.v"
+		}]
+	
+	
+	# Line continuation
+	escapedNewline:
+		name:  "constant.character.escape.newline.line-continuation.v"
+		begin: "(\\\\)$\\s*+"
+		end:   "^"
+		beginCaptures:
+			1: name: "punctuation.definition.escape.v"
+
+
+
 	# Type name, sans modifiers or array indicators
 	type:
 		patterns: [{
@@ -234,4 +363,43 @@ repository:
 			match: "\\[\\]"
 			captures:
 				0: patterns: [include: "#brackets"]
+		]
+
+
+	# name := value
+	variable:
+		name:  "meta.variable.declaration.v"
+		begin: "(?!\\d|_)(\\w+)\\s*(:=)"
+		end:   "$"
+		beginCaptures:
+			1: name: "variable.assignment.v"
+			2: name: "keyword.operator.assignment.declaration.v"
+		patterns: [include: "#variableValue"]
+
+
+	# Named reference to a variable
+	variableRef:
+		patterns: [{
+			# Field accessor: `struct.field.subfield.subsubfield`
+			name:  "meta.member-access.v"
+			match: "(\\w+)((?:\\.\\w+)++\\.?)"
+			captures:
+				1: name: "variable.other.object.v"
+				2: patterns: [
+					{match: "\\.",         name: "punctuation.separator.dot.period.member.accessor.v"}
+					{match: "\\w+(?=\\.)", name: "variable.other.object.property.v"}
+					{match: "\\w+",        name: "variable.other.property.v"}
+				]
+		},{
+			# Regular variable name
+			name: "variable.other.v"
+			match: "\\w+"
+		}]
+
+
+	# Right-hand side of a variable assignment/declaration
+	variableValue:
+		patterns: [
+			{include: "#string"}
+			{include: "#variableRef"}
 		]
