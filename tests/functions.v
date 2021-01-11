@@ -8,7 +8,7 @@ fn foo
 	println(text)
 }
 
-fn bar(names ...
+fn bar(baz int, names ...
 []
 	[]
 string){
