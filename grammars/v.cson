@@ -6,7 +6,40 @@ fileTypes: [
 	"vsh"
 	"vv"
 ]
-patterns: [include: "#main"]
+firstLineMatch: """(?x)
+
+	# Interpreter directive
+	^\\#!.*(?:\\s|\\/|(?<=!)\\b)
+		(?:vsh|v\\s+run)
+	(?:$|\\s)
+
+	|
+
+	# Modelines
+	(?i:
+		# Emacs
+		-\\*-(?:\\s*(?=[^:;\\s]+\\s*-\\*-)|(?:.*?[;\\s]|(?<=-\\*-))mode\\s*:\\s*)
+			(?:vlang|v)
+		(?=[\\s;]|(?<![-*])-\\*-).*?-\\*-
+		
+		|
+		
+		# Vim
+		(?:(?:\\s|^)vi(?:m[<=>]?\\d+|m)?|\\sex)(?=:(?=\\s*set?\\s[^\\n:]+:)|:(?!\\s* set?\\s))
+		(?:(?:\\s|\\s*:\\s*)\\w*(?:\\s*=(?:[^\\n\\\\\\s]|\\\\.)*)?)*[\\s:]
+		(?:filetype|ft|syntax)\\s*=
+			(?:vlang|v)
+		(?=\\s|:|$)
+	)
+"""
+patterns: [{
+	# Interpreter directive
+	name:  "comment.line.number-sign.hashbang.v"
+	begin: "\\A#!"
+	end:   "$"
+	beginCaptures:
+		0: name: "punctuation.definition.comment.v"
+}, include: "#main"]
 
 repository:
 	main:
