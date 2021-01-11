@@ -20,23 +20,15 @@ repository:
 	arg:
 		name:  "meta.parameter.v"
 		begin: "(?:(mut)\\s+)?(?!\\d|_\\b)(\\w+)\\b"
-		end:   "(?!\\d)(\\w+)|(?=\\s*(?!/[/*]|\\.{3})[^\\[\\w\\s])"
+		end:   "(?!\\d|\\G)(?<=\\w)\\b|(?=\\s*(?!/[/*]|\\.{3})[^\\[\\w\\s])"
 		beginCaptures:
 			1: name: "storage.modifier.mutable.v"
 			2: name: "variable.parameter.function.v"
-		endCaptures:
-			1: name: "storage.type.${1:/downcase}.v"
 		patterns: [{
 			# Ellipsis/“splat” operator, used to implement variadic functions
 			name: "keyword.operator.range.ellipsis.splat.spread.rest.v"
 			match: "\\.{3}"
-		},{
-			# Array indicator: `list []string`, `table [][]string`
-			name: "punctuation.definition.array-type.v"
-			match: "\\[\\]"
-			captures:
-				0: patterns: [include: "#brackets"]
-		}, include: "#comment"]
+		}, include: "#types"]
 
 
 	# Argument list, surrounded by parentheses
@@ -49,7 +41,7 @@ repository:
 		patterns: [
 			{include: "#comment"}
 			{include: "#arg"}
-			{match: ",", name: "punctuation.separator.parameters.comma.v"}
+			{include: "#comma"}
 		]
 
 
@@ -65,6 +57,12 @@ repository:
 			{match: "<",   name: "punctuation.definition.bracket.angle.begin.v"}
 			{match: ">",   name: "punctuation.definition.bracket.angle.end.v"}
 		]
+
+
+	# You know what this is
+	comma:
+		name: "punctuation.separator.delimiter.list.comma.v"
+		match: ","
 
 
 	# Comments, both single- and multi-line forms
@@ -96,16 +94,25 @@ repository:
 	function:
 		name:  "meta.function.v"
 		begin: "(?<![-$])\\b(?:(pub)\\s+)?(fn)(?=\\s|$|\\()"
-		end:   "(?!\\G)"
+		end:   "(?!\\G|(?={))"
 		beginCaptures:
 			1: name: "storage.modifier.public.v"
 			2: name: "storage.type.function.v"
 		patterns: [{
+			name:  "meta.function-header.v"
 			begin: "\\G"
 			end:   "(?={)"
 			patterns: [include: "#functionHeader"]
+		},{
+			name:  "meta.function-body.v"
+			begin: "{"
+			end:   "}"
+			beginCaptures: 0: patterns: [include: "#brackets"]
+			endCaptures:   0: patterns: [include: "#brackets"]
+			patterns: [include: "#main"]
 		}]
-	
+
+
 	# fn foo(arg type)
 	functionHeader:
 		patterns: [{
@@ -119,4 +126,51 @@ repository:
 			begin: "(?=\\()"
 			end:   "(?<=\\))"
 			patterns: [include: "#args"]
+		},{
+			# Function name
+			begin: "\\w+"
+			end:   "(?={)"
+			beginCaptures:
+				0: name: "entity.name.function.v"
+			patterns: [{
+				# Argument list
+				name: "meta.parameters.v"
+				begin: "(?=\\()"
+				end:   "(?<=\\))"
+				patterns: [include: "#args"]
+			},{
+				# Return type
+				name:  "meta.return-type.v"
+				begin: "(?<=\\))"
+				end:   "(?={)|(?<=\\))(?!\\G)"
+				patterns: [{
+					# Multiple return values: fn foo() (first, second) {…}
+					begin: "\\("
+					end:   "\\)"
+					beginCaptures: 0: patterns: [include: "#brackets"]
+					endCaptures:   0: patterns: [include: "#brackets"]
+					patterns: [include: "#types"]
+				}, include: "#types"]
+			}, include: "#comment"]
 		}]
+
+
+	# Type name, sans modifiers or array indicators
+	type:
+		name: "storage.type.${1:/downcase}.v"
+		match: "(?!\\d)(\\w+)"
+
+
+	# Anywhere type annotations are expected/legal
+	types:
+		patterns: [
+			{include: "#comment"}
+			{include: "#type"}
+			{include: "#comma"}
+			
+			# Array indicator: `list []string`, `table [][]string`
+			name: "punctuation.definition.array-type.v"
+			match: "\\[\\]"
+			captures:
+				0: patterns: [include: "#brackets"]
+		]
