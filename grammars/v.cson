@@ -146,6 +146,7 @@ repository:
 	expr:
 		patterns: [
 			{include: "#string"}
+			{include: "#number"}
 			{include: "#operators"}
 			{include: "#exprGroup"}
 			{include: "#variable"}
@@ -246,20 +247,42 @@ repository:
 		]
 
 
+	# All forms of numeric literals
+	number:
+		patterns: [
+			{include: "#numberFloat"}
+			{include: "#numberInt"}
+		]
+	
+	# Floating-point
+	numberFloat:
+		name:  "constant.numeric.decimal.float.real.v"
+		match: "\\b(?!_)[\\d_]+(?<!_)\\.\\d*|\\.\\d+"
+
+	# Integers, signed or unsigned
+	numberInt:
+		patterns: [
+			{match: "\\b0x(?!_)[0-9A-F_a-f]+(?<!_)\\b", name: "constant.numeric.integer.hexadecimal.int.hex.v"}
+			{match: "\\b0o(?!_)[0-7_]+(?<!_)\\b",       name: "constant.numeric.integer.octal.int.oct.v"}
+			{match: "\\b0b(?!_)[0-1_]+(?<!_)\\b",       name: "constant.numeric.integer.binary.int.bin.v"}
+			{match: "\\b(?!_)[0-9_]+(?<!_)\\b",         name: "constant.numeric.integer.decimal.int.dec.v"}
+		]
+
+
 	# Non-alphanumeric operators
 	operators:
 		patterns: [
-			{include: "#operatorsAssignment"}
 			{include: "#operatorsExpr"}
+			{include: "#operatorsAssignment"}
 		]
 
 	# Operators used for declaring or reassigning a variable
 	operatorsAssignment:
 		patterns: [
-			{match: "(?:<<|>>|[~&|^])=", name: "keyword.operator.assignment.compound.bitwise.v"}
-			{match: "[-+*/%]=",          name: "keyword.operator.assignment.compound.v"}
-			{match: ":=",                name: "keyword.operator.assignment.declaration.v"}
-			{match: "=(?!=)",            name: "keyword.operator.assignment.mutation.v"}
+			{match: "(?:<<|>>|[&|^])=", name: "keyword.operator.assignment.compound.bitwise.v"}
+			{match: "[-+*/%]=",         name: "keyword.operator.assignment.compound.v"}
+			{match: ":=",               name: "keyword.operator.assignment.declaration.v"}
+			{match: "(?<!=)=(?!=)",     name: "keyword.operator.assignment.mutation.v"}
 		]
 
 	# Operators accepted as part of an expression
@@ -270,8 +293,8 @@ repository:
 			{match: "&&",      name: "keyword.operator.logical.boolean.and.v"}
 			{match: "!!",      name: "keyword.operator.logical.boolean.cast.v"}
 			{match: "!",       name: "keyword.operator.logical.boolean.not.v"}
-			{match: "<<|>>",   name: "keyword.operator.bitwise.binary.v"}
-			{match: "[~&|^]",  name: "keyword.operator.bitwise.unary.v"}
+			{match: "<<|>>",   name: "keyword.operator.bitwise.shift.v"}
+			{match: "[~&|^]",  name: "keyword.operator.bitwise.v"}
 			{include: "#operatorsMath"}
 		]
 	
@@ -490,16 +513,25 @@ repository:
 			{include: "#varAssign"}
 		]
 	
-	# Variable assignment, legal or not: `name = value`, `name += value`
+	# Variable assignment, legal or not
 	varAssign:
-		name:  "meta.variable.assignment.v"
-		begin: "\\b(?!pub|mut)(?=\\w+\\s*(?:<<|>>|[-+*/%~&|^])?=)"
-		end:   "(?!\\G)"
-		patterns: [
-			{include: "#varLHS"}
-			{include: "#varRHS"}
-		]
-
+		patterns: [{
+			# `name = value`, `name += value`
+			name:  "meta.variable.assignment.v"
+			begin: "\\b(?!pub|mut)(?=\\w+\\s*(?:<<|>>|[-+*/%&|^])?=)"
+			end:   "(?!\\G)"
+			patterns: [
+				{include: "#varLHS"}
+				{include: "#varRHS"}
+			]
+		},{
+			# Incomplete assignment statement; included for the same reasons
+			# outlined below (see comment in “#varDecl” rule's last pattern).
+			begin: "(?=(?:<<|>>|[-+*/%&|^])?=)"
+			end:   "(?!\\G)"
+			patterns: [include: "#varRHS"]
+		}]
+		
 	# Private, immutable Variable declaration (default)
 	varDecl:
 		patterns: [{
@@ -578,7 +610,7 @@ repository:
 	varLHS:
 		name:  "meta.lhs.v"
 		begin: "\\G"
-		end:   "(?=\\s*(?:<<|>>|[-+*/%~&|^:])?=)"
+		end:   "(?=\\s*(?:<<|>>|[-+*/%&|^:])?=)"
 		patterns: [{
 			# Skip lines that're blank or contain only comments, ignoring
 			# a stray `mut` that might be left from `pub \n mut …`
@@ -602,17 +634,17 @@ repository:
 	# Right-hand side of a variable declaration/assignment
 	varRHS:
 		contentName: "meta.rhs.v"
-		begin: "(?:<<|>>|[-+*/%~&|^:])?="
+		begin: "[ \\t]*((?:<<|>>|[-+*/%&|^:])?=)"
 		end:   "(?!\\G)"
 		beginCaptures:
-			0: patterns: [include: "#operatorsAssignment"]
+			1: patterns: [include: "#operatorsAssignment"]
 		patterns: [{
 			# Skip past empty or comment-only lines
 			begin: "\\G[ \\t]*(?=$|/[/*])"
 			end:   "(?=\\S)(?!/[/*])"
 			patterns: [include: "#expr"]
 		},{
-			begin: "\\G[ \\t]*(?=\\S)(?!/[/*])"
+			begin: "\\G[ \\t]*(?=[^\\s\\(])(?!/[/*])"
 			end:   "$|(?=[}\\]\\),])"
 			patterns: [include: "#expr"]
-		}]
+		}, include: "#expr"]
