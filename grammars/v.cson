@@ -46,11 +46,11 @@ repository:
 		patterns: [
 			{include: "#comment"}
 			{include: "#function"}
-			{include: "#variable"}
+			{include: "#var"}
 			
 			# Fallback highlighting for unexpected tokens
-			{include: "#string"}
-			{include: "#type"}
+			{include: "#expr"}
+			{include: "#typeBuiltin"}
 			{include: "#brackets"}
 			{include: "#comma"}
 		]
@@ -64,11 +64,10 @@ repository:
 		beginCaptures:
 			1: name: "storage.modifier.mutable.v"
 			2: name: "variable.parameter.function.v"
-		patterns: [{
-			# Ellipsis/“splat” operator, used to implement variadic functions
-			name: "keyword.operator.range.ellipsis.splat.spread.rest.v"
-			match: "\\.{3}"
-		}, include: "#types"]
+		patterns: [
+			{include: "#dots"}
+			{include: "#types"}
+		]
 
 
 	# Argument list, surrounded by parentheses
@@ -128,6 +127,39 @@ repository:
 		beginCaptures: 0: name: "punctuation.definition.comment.begin.v"
 		endCaptures:   0: name: "punctuation.definition.comment.end.v"
 		patterns: [include: "#commentBlock"]
+
+
+	# Contiguous Full-stops/periods
+	dots:
+		patterns: [{
+			# Ellipsis/“splat” operator, used to implement variadic functions: `...rest`
+			name: "keyword.operator.range.ellipsis.splat.spread.rest.dots.v"
+			match: "\\.{3}"
+		},{
+			# Slice/range operator: `1..3`
+			name:  "keyword.operator.slice.range.spread.dots.v"
+			match: "(?<!\\.)\\.{2}(?!\\.)"
+		}]
+
+
+	# Expression (e.g., stuff matched after `:=`)
+	expr:
+		patterns: [
+			{include: "#string"}
+			{include: "#operators"}
+			{include: "#exprGroup"}
+			{include: "#variable"}
+			{include: "#comment"}
+		]
+
+	# ((Bracketed) (expression))
+	exprGroup:
+		name:  "meta.expression.v"
+		begin: "\\("
+		end:   "\\)"
+		beginCaptures: 0: patterns: [include: "#brackets"]
+		endCaptures:   0: patterns: [include: "#brackets"]
+		patterns: [include: "#expr"]
 
 
 	# Function declaration
@@ -193,7 +225,61 @@ repository:
 				}, include: "#types"]
 			}, include: "#comment"]
 		}]
+	
+	
+	# Identifier, including any adjoining subscripts: `struct.field`, `array[index]`
+	ident:
+		begin: "\\b(_)\\b|(?!\\d)(\\w+)"
+		end:   "(?!/[/*])(?=[^\\s\\[.])"
+		beginCaptures:
+			1: name: "constant.language.ignored-value.v"
+			2: name: "variable.other.v"
+		patterns: [include: "#subscript"]
+	
+	
+	# Access modifiers
+	modifiers:
+		patterns: [
+			{match: "\\b(pub)\\b",       name: "storage.modifier.access.pub.public.v"}
+			{match: "\\b(mut)\\b",       name: "storage.modifier.access.mut.mutable.v"}
+			{match: "\\b(__global)\\b",  name: "storage.modifier.access.all.global.v"}
+		]
 
+
+	# Non-alphanumeric operators
+	operators:
+		patterns: [
+			{include: "#operatorsAssignment"}
+			{include: "#operatorsExpr"}
+		]
+
+	# Operators used for declaring or reassigning a variable
+	operatorsAssignment:
+		patterns: [
+			{match: "(?:<<|>>|[~&|^])=", name: "keyword.operator.assignment.compound.bitwise.v"}
+			{match: "[-+*/%]=",          name: "keyword.operator.assignment.compound.v"}
+			{match: ":=",                name: "keyword.operator.assignment.declaration.v"}
+			{match: "=(?!=)",            name: "keyword.operator.assignment.mutation.v"}
+		]
+
+	# Operators accepted as part of an expression
+	operatorsExpr:
+		patterns: [
+			{match: "!=|==",   name: "keyword.operator.logical.comparison.v"}
+			{match: "\\|\\|",  name: "keyword.operator.logical.boolean.or.v"}
+			{match: "&&",      name: "keyword.operator.logical.boolean.and.v"}
+			{match: "!!",      name: "keyword.operator.logical.boolean.cast.v"}
+			{match: "!",       name: "keyword.operator.logical.boolean.not.v"}
+			{match: "<<|>>",   name: "keyword.operator.bitwise.binary.v"}
+			{match: "[~&|^]",  name: "keyword.operator.bitwise.unary.v"}
+			{include: "#operatorsMath"}
+		]
+	
+	# Usual BODMAS fauna: + - * / %
+	operatorsMath:
+		name: "keyword.operator.arithmetic.v"
+		match: "(?!/[/*])[-+*/%](?!=)"
+	
 
 	# "Quoted string" or rune (character literal)
 	string:
@@ -258,7 +344,10 @@ repository:
 			match: "(\\$)(\\w+(?:\\.\\w+)*)"
 			captures:
 				1: name: "punctuation.definition.variable.v"
-				2: patterns: [include: "#variableRef"]
+				2: patterns: [
+					{include: "#variable"}
+					{include: "#subscript"}
+				]
 		},{
 			# Bracketed: "${foo.bar > 32}"
 			name:  "meta.embedded.section.interpolation.complex.v"
@@ -267,11 +356,31 @@ repository:
 			beginCaptures: 0: name: "punctuation.section.embedded.begin.v"
 			endCaptures:   0: name: "punctuation.section.embedded.end.v"
 			patterns: [
-				{include: "#variableRef"}
+				{include: "#expr"}
 				{include: "#main"}
 			]
 		}]
-		
+	
+	
+	# Item access, which may span multiple lines (hence the begin/end blocks)
+	subscript:
+		patterns: [{
+			# Array-like access: foo[1], bar[0][1..3]
+			name:  "meta.subscript.member-access.indexed.v"
+			begin: "\\["
+			end:   "\\]"
+			beginCaptures: 0: patterns: [include: "#brackets"]
+			endCaptures:   0: patterns: [include: "#brackets"]
+			patterns: [include: "#expr"]
+		},{
+			# Struct field access: foo.bar, foo.bar.baz
+			name:  "meta.subscript.member-access.named.v"
+			begin: "(?<!\\.)\\.(?!\\.)"
+			end:   "\\w+|(?!/[/*])(?=[^\\w\\s\\[.])"
+			beginCaptures: 0: name: "punctuation.separator.member.accessor.dot.period.v"
+			endCaptures:   0: name: "variable.other.property.v"
+			patterns: [include: "#comment"]
+		}, include: "#comment"]
 
 
 	# Escaped string characters
@@ -322,33 +431,37 @@ repository:
 
 
 
-	# Type name, sans modifiers or array indicators
+	# Type name, sans access modifiers or array indicators
 	type:
-		patterns: [{
-			# Predefined types
-			name: "support.type.${1:/downcase}.v"
-			match: "(?x) \\b
-				( any
-				| any_float
-				| any_int
-				| bool
-				| byte
-				| byteptr
-				| charptr
-				| f(?:32|64)
-				| [iu](?:8|16|32|64|128)
-				| int
-				| rune
-				| size_t
-				| string
-				| voidptr
-				) \\b"
-		},{
-			# User-defined
-			name: "entity.name.type.v"
-			match: "(?!\\d)(\\w+)"
-		}]
-			
+		patterns: [
+			{include: "#typeBuiltin"}
+			{include: "#typeUser"}
+		]
+
+	# Predefined/built-in types
+	typeBuiltin:
+		name: "support.type.${1:/downcase}.v"
+		match: "(?x) \\b
+			( any
+			| any_float
+			| any_int
+			| bool
+			| byte
+			| byteptr
+			| charptr
+			| f(?:32|64)
+			| [iu](?:8|16|32|64|128)
+			| int
+			| rune
+			| size_t
+			| string
+			| voidptr
+			) \\b"			
+
+	# User-defined/unknown type
+	typeUser:
+		name: "entity.name.type.v"
+		match: "(?!\\d)(\\w+)"
 
 
 	# Anywhere type annotations are expected/legal
@@ -366,40 +479,140 @@ repository:
 		]
 
 
-	# name := value
-	variable:
-		name:  "meta.variable.declaration.v"
-		begin: "(?!\\d|_)(\\w+)\\s*(:=)"
-		end:   "$"
-		beginCaptures:
-			1: name: "variable.assignment.v"
-			2: name: "keyword.operator.assignment.declaration.v"
-		patterns: [include: "#variableValue"]
-
-
-	# Named reference to a variable
-	variableRef:
-		patterns: [{
-			# Field accessor: `struct.field.subfield.subsubfield`
-			name:  "meta.member-access.v"
-			match: "(\\w+)((?:\\.\\w+)++\\.?)"
-			captures:
-				1: name: "variable.other.object.v"
-				2: patterns: [
-					{match: "\\.",         name: "punctuation.separator.dot.period.member.accessor.v"}
-					{match: "\\w+(?=\\.)", name: "variable.other.object.property.v"}
-					{match: "\\w+",        name: "variable.other.property.v"}
-				]
-		},{
-			# Regular variable name
-			name: "variable.other.v"
-			match: "\\w+"
-		}]
-
-
-	# Right-hand side of a variable assignment/declaration
-	variableValue:
+	# Variable declaration or assignment
+	var:
 		patterns: [
-			{include: "#string"}
-			{include: "#variableRef"}
+			{include: "#varPubMut"}
+			{include: "#varGlobal"}
+			{include: "#varMut"}
+			{include: "#varPub"}
+			{include: "#varDecl"}
+			{include: "#varAssign"}
 		]
+	
+	# Variable assignment, legal or not: `name = value`, `name += value`
+	varAssign:
+		name:  "meta.variable.assignment.v"
+		begin: "\\b(?!pub|mut)(?=\\w+\\s*(?:<<|>>|[-+*/%~&|^])?=)"
+		end:   "(?!\\G)"
+		patterns: [
+			{include: "#varLHS"}
+			{include: "#varRHS"}
+		]
+
+	# Private, immutable Variable declaration (default)
+	varDecl:
+		patterns: [{
+			# `name := value`
+			name:  "meta.variable.declaration.v"
+			begin: "\\b(?!pub|mut)(?=\\w+\\s*:=)"
+			end:   "(?!\\G)"
+			patterns: [
+				{include: "#varLHS"}
+				{include: "#varRHS"}
+			]
+		},{
+			# XXX: Incomplete declaration statement. Included to improve our
+			# chances of correctly highlighting weird (but legal) constructs
+			# (e.g., `name /*… \n …*/ := value`)
+			begin: "(?=:=)"
+			end:   "(?!\\G)"
+			patterns: [include: "#varRHS"]
+		}]
+	
+	# Global variable: `__global name := value`
+	varGlobal:
+		name:  "meta.variable.declaration.global.v"
+		begin: "\\b(__global)(?=\\s|$|/[/*])"
+		end:   "(?!\\G)"
+		beginCaptures:
+			1: patterns: [include: "#modifiers"]
+		patterns: [
+			{include: "#varLHS"}
+			{include: "#varRHS"}
+		]
+	
+	# Public, mutable variable declaration: `pub mut name := value`
+	#
+	# NB: This won't match `pub \n mut` due to limitations of TextMate.
+	# Instead, “#varPub” is written to accommodate an unexpected `mut`.
+	varPubMut:
+		name:  "meta.variable.declaration.public.mutable.v"
+		begin: "\\b(pub\\s+mut)(?=\\s|$|/[/*])"
+		end:   "(?!\\G)"
+		beginCaptures:
+			1: patterns: [include: "#modifiers"]
+		patterns: [
+			{include: "#varLHS"}
+			{include: "#varRHS"}
+		]
+
+	# Private, mutable variable declaration: `mut name := value`
+	varMut:
+		name:  "meta.variable.declaration.mutable.v"
+		begin: "\\b(mut)(?=\\s|$|/[/*])"
+		end:   "(?!\\G)"
+		beginCaptures:
+			1: patterns: [include: "#modifiers"]
+		patterns: [
+			{include: "#varLHS"}
+			{include: "#varRHS"}
+		]
+
+	# Public, immutable variable declaration: `pub name := value`
+	#
+	# NOTE: This rule also covers `pub \n mut name := value`,
+	# which is impossible to match short of a begin/end pair.
+	varPub:
+		name:  "meta.variable.declaration.public.v"
+		begin: "\\b(pub)(?=\\s|$|/[/*])"
+		end:   "(?!\\G)"
+		beginCaptures:
+			1: patterns: [include: "#modifiers"]
+		patterns: [
+			{include: "#varLHS"}
+			{include: "#varRHS"}
+		]
+	
+	# Left-hand side of a variable declaration/assignment
+	varLHS:
+		name:  "meta.lhs.v"
+		begin: "\\G"
+		end:   "(?=\\s*(?:<<|>>|[-+*/%~&|^:])?=)"
+		patterns: [{
+			# Skip lines that're blank or contain only comments, ignoring
+			# a stray `mut` that might be left from `pub \n mut …`
+			begin: "\\G(?=(?:[ \\t]*\\bmut\\b)?[ \\t]*(?:$|/[/*]))"
+			end:   "(?=\\w)(?!\\bmut\\b)"
+			patterns: [
+				{include: "#modifiers"}
+				{include: "#comment"}
+			]
+		},{
+			begin: "\\w+"
+			end:   "(?=[^\\[\\s.])(?!/[/*])"
+			beginCaptures:
+				0: name: "variable.assignment.v"
+			patterns: [
+				{include: "#subscript"}
+				{include: "#comment"}
+			]
+		}, include: "#comment"]
+	
+	# Right-hand side of a variable declaration/assignment
+	varRHS:
+		contentName: "meta.rhs.v"
+		begin: "(?:<<|>>|[-+*/%~&|^:])?="
+		end:   "(?!\\G)"
+		beginCaptures:
+			0: patterns: [include: "#operatorsAssignment"]
+		patterns: [{
+			# Skip past empty or comment-only lines
+			begin: "\\G[ \\t]*(?=$|/[/*])"
+			end:   "(?=\\S)(?!/[/*])"
+			patterns: [include: "#expr"]
+		},{
+			begin: "\\G[ \\t]*(?=\\S)(?!/[/*])"
+			end:   "$|(?=[}\\]\\),])"
+			patterns: [include: "#expr"]
+		}]

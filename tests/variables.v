@@ -19,6 +19,6 @@ fn main(){
 		escaped: r'\r\n'
 	}
 	
-	abbr := crlf.name
-	println("<${crlf.name == abbr}>")
+	abbr := crlf . name
+	println("<${!!(crlf.name == abbr)}>")
 }
