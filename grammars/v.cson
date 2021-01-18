@@ -51,7 +51,6 @@ repository:
 			# Fallback highlighting for unexpected tokens
 			{include: "#expr"}
 			{include: "#typeBuiltin"}
-			{include: "#brackets"}
 			{include: "#comma"}
 		]
 
@@ -68,6 +67,32 @@ repository:
 			{include: "#dots"}
 			{include: "#types"}
 		]
+
+
+	# Array literal, matched in expressions only (see “#types” for `[]int`, etc)
+	array:
+		patterns: [{
+			name:  "meta.array.v"
+			begin: "\\["
+			end:   "\\]"
+			beginCaptures: 0: patterns: [include: "#brackets"]
+			endCaptures:   0: patterns: [include: "#brackets"]
+			patterns: [
+				{include: "#expr"}
+				{include: "#comma"}
+				{include: "#dots"}
+			]
+		},{
+			# Array accesses can span multiple lines: `[…] \n .len`
+			name:  "meta.array.field.v"
+			begin: "(?<=\\])"
+			end:   "(?!\\G)"
+			patterns: [{
+				begin: "\\G"
+				end:   "(?=[^\\s:=.\\[])(?!\\.|/[/*])"
+				patterns: [include: "#subscript"]
+			}]
+		}]
 
 
 	# Argument list, surrounded by parentheses
@@ -154,9 +179,10 @@ repository:
 			{include: "#string"}
 			{include: "#number"}
 			{include: "#boolean"}
+			{include: "#array"}
 			{include: "#operators"}
 			{include: "#exprGroup"}
-			{include: "#variable"}
+			{include: "#var"}
 			{include: "#comment"}
 		]
 
@@ -264,7 +290,7 @@ repository:
 	# Floating-point
 	numberFloat:
 		name:  "constant.numeric.decimal.float.real.v"
-		match: "\\b(?!_)[\\d_]+(?<!_)\\.\\d*|\\.\\d+"
+		match: "\\b(?!_)[\\d_]+(?<!_)\\.(?!\\.)\\d*|\\.\\d+"
 
 	# Integers, signed or unsigned
 	numberInt:
@@ -375,7 +401,7 @@ repository:
 			captures:
 				1: name: "punctuation.definition.variable.v"
 				2: patterns: [
-					{include: "#variable"}
+					{include: "#var"}
 					{include: "#subscript"}
 				]
 		},{
