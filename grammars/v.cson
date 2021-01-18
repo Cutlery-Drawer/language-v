@@ -84,6 +84,12 @@ repository:
 		]
 
 
+	# Boolean primitives
+	boolean:
+		name:  "constant.language.boolean.$1.v"
+		match: "\\b(true|false)\\b"
+
+
 	# Bracket characters
 	brackets:
 		patterns: [
@@ -147,6 +153,7 @@ repository:
 		patterns: [
 			{include: "#string"}
 			{include: "#number"}
+			{include: "#boolean"}
 			{include: "#operators"}
 			{include: "#exprGroup"}
 			{include: "#variable"}

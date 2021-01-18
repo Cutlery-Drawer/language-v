@@ -5,6 +5,8 @@ struct EOL {
 }
 
 fn main(){
+	bools := [true, false]
+	
 	foo := "Foo"
 	bar := 'Bar'
 	cr  := '\r'
